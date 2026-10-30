@@ -1,0 +1,36 @@
+{
+  "search_url": "https://www.kleinanzeigen.de/s-wohnung-mieten/sortierung:neuste/anbieter:privat/anzeige:angebote/c203",
+  "max_pages": 3,
+  "interval_minutes": 15,
+  "jitter_minutes": 3,
+  "seed_on_first_run": true,
+  "max_photos": 20,
+  "positive_patterns": [
+    "job[\\s\\-‐‑‒–]?cent(?:er|re)",
+    "(?<!\\w)arge(?!\\w)",
+    "(?<!\\w)jc(?!\\w)",
+    "(?<!\\w)sgb[\\s\\-]?(?:ii|2)(?!\\w)",
+    "(?:miet|kosten|zahlung|mietzahlung)[\\s\\-]?(?:übernahme|uebernahme|zusage|zahlung)\\s+(?:durch|vom|über|ueber|von|bei)\\s+(?:das\\s+|den\\s+|dem\\s+)?(?:amt|jobcenter|arge)",
+    "(?<!\\w)amt\\s+(?:zahlt|übernimmt|uebernimmt|übernehmen|uebernehmen|bezahlt)"
+  ],
+  "negation_frames": [
+    "\\bbitte\\s+keine\\b",
+    "\\bkeine?\\s+(?:\\w+\\s+)?(?:anfragen|bewerbungen|interessenten|personen|menschen|mieter|bezieher|empf[aä]nger|leute|haushalte|leistungsempf\\w*|transferleistungen)\\b",
+    "\\bnicht\\s+(?:an|für|fuer|mit|vermietet\\s+an)\\s+(?:\\w+\\s+)?(?:personen|menschen|mieter|bezieher|empf[aä]nger|leute|haushalte|jobcenter|job-?center|arge)",
+    "\\b(?:nur|ausschließlich|ausschliesslich)\\s+(?:an\\s+)?(?:selbstzahler|berufst[aä]tig\\w*|selbst\\s+zahlende\\w*)",
+    "\\bausschluss\\b"
+  ],
+  "negation_words": [
+    "nicht", "kein", "keine", "keinen", "keiner", "keinem", "keins", "keines",
+    "ohne", "weder", "nie", "niemals", "nein", "ausschluss", "ausgeschlossen",
+    "verboten", "unerwünscht", "unerwuenscht", "ausnahmslos"
+  ],
+  "after_negation_words": [
+    "ausgeschlossen", "ausgeschloßen", "ausschluss", "abgelehnt", "unerwünscht", "unerwuenscht",
+    "nicht erwünscht", "nicht erwuenscht", "nicht gewünscht", "nicht gewuenscht",
+    "nicht möglich", "nicht moeglich", "nicht gestattet", "nicht erlaubt",
+    "nicht geeignet", "nicht akzeptiert", "nicht zulässig", "nicht zulaessig",
+    "nicht vermietbar", "nicht vermietet", "nein", "nö", "verboten", "unmöglich", "unmoeglich",
+    "leider nicht", "nicht gewollt", "kommt nicht in frage", "kommt nicht infrage"
+  ]
+}
