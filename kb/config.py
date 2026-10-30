@@ -10,6 +10,9 @@ ROOT = Path(__file__).resolve().parent.parent
 
 @dataclass
 class Config:
+    source: str  # "scraper" — парсинг сайта, "api" — kleinanzeigen-agent.de
+    api_query: str
+    api_category_id: int
     search_url: str
     max_pages: int
     interval_minutes: int
@@ -29,7 +32,10 @@ def load_config(path: Path = ROOT / "config.json") -> Config:
     load_dotenv(ROOT / ".env")
     raw = json.loads(path.read_text(encoding="utf-8"))
     return Config(
-        search_url=raw["search_url"].strip(),
+        source=raw.get("source", "scraper"),
+        api_query=raw.get("api_query", "Jobcenter"),
+        api_category_id=int(raw.get("api_category_id", 203)),
+        search_url=raw.get("search_url", "").strip(),
         max_pages=int(raw.get("max_pages", 2)),
         interval_minutes=int(raw.get("interval_minutes", 15)),
         jitter_minutes=int(raw.get("jitter_minutes", 3)),

@@ -1,4 +1,7 @@
 {
+  "source": "scraper",
+  "api_query": "Jobcenter",
+  "api_category_id": 203,
   "search_url": "https://www.kleinanzeigen.de/s-wohnung-mieten/sortierung:neuste/anbieter:privat/anzeige:angebote/c203",
   "max_pages": 3,
   "interval_minutes": 15,

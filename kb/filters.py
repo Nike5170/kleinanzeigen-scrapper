@@ -108,3 +108,35 @@ class KeywordFilter:
         tail = sentence[pos:]
         m = _CLAUSE_BREAK.search(tail)
         return tail[: m.start()] if m else tail
+
+
+_TENANT_TITLE = re.compile(r"(?<!\w)(?:suche|sucht|gesucht|gesuch)(?!\w)", re.IGNORECASE)
+_NACHMIETER = re.compile(r"nachmieter", re.IGNORECASE)  # "Nachmieter gesucht" — это арендодатель
+
+# Фразы, которыми пишут арендаторы в тексте. "Wir suchen nette Mieter" сюда не входит:
+# так пишет арендодатель, а не арендатор.
+_TENANT_TEXT = [
+    re.compile(p, re.IGNORECASE)
+    for p in [
+        r"\bwir\s+sind\s+(?:eine?\s+)?(?:[\w-]+\s+){0,3}(?:familie|paar|person|menschen|mieter)",
+        r"\bauf\s+der\s+(?:wohnungs)?suche\b",
+        r"\bwohnungssuche\b",
+        r"\bliebe\s+vermieter",
+        r"\bsehr\s+geehrte\s+vermieter",
+        r"\bich\s+suche\b",
+        r"\bwir\s+suchen\s+(?:eine?|ein|eine\s+neue)\s+(?:[\w-]+\s+)?(?:wohnung|zimmer|whg)",
+        r"\bmieter(?:in)?\s+sucht\b",
+        r"\bsuchen\s+(?:eine?|ein)\s+(?:neue[nr]?\s+)?(?:wohnung|zuhause|heim)",
+        r"\bdie\s+miete\s+wird\s+(?:von\s+uns\s+)?(?:verlässlich\s+)?(?:pünktlich\s+)?über\s+das\s+jobcenter\s+übernommen",
+    ]
+]
+
+
+def is_tenant_wanted(title: str, description: str = "") -> bool:
+    """Арендатор ищет квартиру, а не сдаёт её. Такие объявления помечены как частные предложения,
+    но к сдаче не относятся: "Mieterin sucht 1-Zimmer-Wohnung", "Liebe Vermieterinnen, wir sind eine Familie…"."""
+    title = title or ""
+    if _TENANT_TITLE.search(title) and not _NACHMIETER.search(title):
+        return True
+    text = f"{title}\n{description or ''}"
+    return any(p.search(text) for p in _TENANT_TEXT)
