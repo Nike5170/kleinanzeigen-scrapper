@@ -4,7 +4,7 @@
   "interval_minutes": 15,
   "jitter_minutes": 3,
   "seed_on_first_run": true,
-  "max_photos": 20,
+  "max_photos": 10,
   "positive_patterns": [
     "job[\\s\\-‐‑‒–]?cent(?:er|re)",
     "(?<!\\w)arge(?!\\w)",

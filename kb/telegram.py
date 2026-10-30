@@ -7,6 +7,7 @@ from html import escape
 import requests
 
 from kb.scraper import Listing
+from kb.translate import Translator, label_ru, location_ru, value_ru
 
 logger = logging.getLogger(__name__)
 
@@ -29,29 +30,32 @@ class _Piece:
     text: str
 
 
-def build_messages(listing: Listing) -> list[str]:
-    """Собирает HTML-сообщения. Первое — под подпись к альбому (до 1024 символов),
-    остальные — отдельные текстовые сообщения (до 4096). Длинный текст режется по строкам."""
-    pieces: list[_Piece] = [_Piece("title", listing.title)]
+def build_messages(listing: Listing, translator: Translator) -> list[str]:
+    """Собирает HTML-сообщения на русском. Первое уходит подписью к альбому (до 1024 символов),
+    остальные — отдельными текстовыми сообщениями (до 4096). Цель — уложиться в два сообщения."""
+    # Один пакетный запрос на перевод вместо десятка мелких.
+    to_translate = [listing.title, *listing.description.splitlines()]
+    to_translate += [v for _, v in listing.attributes] + [l for l, _ in listing.attributes]
+    translator.translate_many(to_translate)
+
+    pieces: list[_Piece] = [_Piece("title", translator.translate(listing.title))]
     if listing.price:
-        pieces.append(_Piece("text", f"💶 Preis: {listing.price}"))
+        pieces.append(_Piece("text", f"💶 Цена: {listing.price.replace('VB', 'торг')}"))
     if listing.location:
-        pieces.append(_Piece("text", f"📍 Ort: {listing.location}"))
+        pieces.append(_Piece("text", f"📍 Место: {location_ru(listing.location)}"))
+    pieces.append(_Piece("link", listing.url))
 
     if listing.attributes:
         pieces.append(_Piece("text", ""))
-        pieces.append(_Piece("text", "🏠 Details:"))
+        pieces.append(_Piece("text", "🏠 Характеристики:"))
         for label, value in listing.attributes:
-            pieces.append(_Piece("text", f"• {label}: {value}"))
+            pieces.append(_Piece("text", f"• {label_ru(label, translator)}: {value_ru(value, translator)}"))
 
     if listing.description:
         pieces.append(_Piece("text", ""))
-        pieces.append(_Piece("text", "📝 Beschreibung:"))
-        for line in listing.description.splitlines():
+        pieces.append(_Piece("text", "📝 Описание:"))
+        for line in translator.translate_many(listing.description.splitlines()):
             pieces.append(_Piece("text", line))
-
-    pieces.append(_Piece("text", ""))
-    pieces.append(_Piece("link", listing.url))
 
     # Длинные строки режем, чтобы каждая помещалась в бюджет сообщения.
     exploded: list[_Piece] = []
@@ -85,7 +89,7 @@ def _render(pieces: list[_Piece]) -> str:
         if p.kind == "title":
             lines.append(f"<b>{escape(p.text)}</b>")
         elif p.kind == "link":
-            lines.append(f'🔗 <a href="{escape(p.text)}">Zur Anzeige</a>')
+            lines.append(f'<a href="{escape(p.text)}">🔗 Открыть объявление</a>')
         else:
             lines.append(escape(p.text))
     return "\n".join(lines)
@@ -126,8 +130,8 @@ class TelegramClient:
         self._call("sendMediaGroup", {"chat_id": self.chat_id, "media": media})
 
     def send_listing(self, messages: list[str], photo_urls: list[str]) -> None:
-        """Сначала альбомы (первый с подписью), затем остальной текст отдельными сообщениями.
-        Если Telegram не смог загрузить фото, отправляем текст без фото, чтобы объявление не потерялось."""
+        """Сначала альбом (с подписью), затем остальной текст. Если Telegram не смог загрузить фото,
+        отправляем текст без фото, чтобы объявление не потерялось."""
         rest = list(messages)
         if photo_urls:
             caption = rest.pop(0)

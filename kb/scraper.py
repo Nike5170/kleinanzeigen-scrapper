@@ -43,7 +43,7 @@ class DegradedPage(RuntimeError):
 
 
 class Scraper:
-    def __init__(self, delay=(4.0, 8.0), session: requests.Session | None = None):
+    def __init__(self, delay=(8.0, 14.0), session: requests.Session | None = None):
         self.delay = delay
         self.session = session or requests.Session()
         self.session.headers.update(HEADERS)

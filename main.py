@@ -1,19 +1,23 @@
 import argparse
 import logging
+import os
 import random
 import sys
 import time
+
+from dotenv import load_dotenv
 
 from kb.config import load_config
 from kb.filters import KeywordFilter
 from kb.scraper import Scraper
 from kb.storage import Storage
 from kb.telegram import TelegramClient, build_messages
+from kb.translate import Translator
 
 logger = logging.getLogger("kb")
 
 
-def run_once(cfg, scraper, flt, storage, tg, dry_run: bool) -> None:
+def run_once(cfg, scraper, flt, storage, tg, translator, dry_run: bool) -> None:
     if dry_run:
         stubs = scraper.search(cfg.search_url, cfg.max_pages)
     else:
@@ -58,7 +62,7 @@ def run_once(cfg, scraper, flt, storage, tg, dry_run: bool) -> None:
             mark(stub, f"rejected:{verdict.reason}")
             continue
 
-        messages = build_messages(listing)
+        messages = build_messages(listing, translator)
         photos = listing.photo_urls[: cfg.max_photos]
         if dry_run:
             print(f"===== {stub.ad_id} | match={verdict.matches} | photos={len(photos)} | messages={len(messages)}")
@@ -86,6 +90,7 @@ def main() -> int:
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    load_dotenv()
     cfg = load_config()
 
     if args.test_telegram:
@@ -106,11 +111,12 @@ def main() -> int:
     )
     storage = Storage(cfg.db_path)
     tg = TelegramClient(cfg.telegram_token, cfg.telegram_chat_id)
+    translator = Translator(os.environ.get("DEEPL_API_KEY", ""))
 
     try:
         while True:
             try:
-                run_once(cfg, scraper, flt, storage, tg, args.dry_run)
+                run_once(cfg, scraper, flt, storage, tg, translator, args.dry_run)
             except Exception:
                 logger.exception("Cycle failed, will retry next interval")
             if args.once:
